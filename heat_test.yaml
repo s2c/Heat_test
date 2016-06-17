@@ -15,11 +15,27 @@ parameters:
     type: string
     label: Instance Type
     description: Type of instance (flavor) to be used
+    constraints:
+      - allowed_values: [small,standard,service-medium, service-large , compute-medium,compute-large ]
+        description: Value must be one of small,standard,service-medium, service-large , compute-medium,compute-large .
 
 resources:
+  floating_ip:
+    type: OS::Nova::FloatingIP
+    properties:
+      pool: ext-net
   my_instance:
     type: OS::Nova::Server
     properties:
       key_name: { get_param: key_name }
       image: { get_param: image_id }
       flavor: { get_param: instance_type }
+  association:
+    type: OS::Nova::FloatingIPAssociation
+    properties:
+      floating_ip: { get_resource: floating_ip }
+      server_id: { get_resource: my_instance }
+outputs:
+  instance_ip:
+    description: The IP address of the deployed instance
+    value: { get_attr: [my_instance, first_address] }
